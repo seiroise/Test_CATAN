@@ -1,7 +1,6 @@
 # =============== #
 # Unity generated #
 # =============== #
-!Assets/
 Build/
 Temp/
 Obj/
@@ -37,6 +36,7 @@ Thumbs.db
 # ============ #
 # for others   #
 # ============ #
+!Assets/
 
 *.log #log files, for some plugins
 *.pyc #python bytecode cache, for some plugins.
