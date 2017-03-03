@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -23,6 +24,13 @@ public class CATANMapTileLocater : MonoBehaviour {
 	private LocateMode mode = LocateMode.Normal;
 	[SerializeField]
 	private GameObject[] locateObjs;
+	[Header("Dice Num")]
+	[SerializeField]
+	private Transform diceNumParent;	//ダイス番号テキストの親
+	[SerializeField]
+	private Text diceNumText;           //ダイス番号テキスト
+	[SerializeField]
+	private float textY = 0.15f;		//テキストのy座標
 
 	[Header("Debug")]
 	public bool isDebug = false;
@@ -47,6 +55,9 @@ public class CATANMapTileLocater : MonoBehaviour {
 		3, 3, 3, 3, 3, 3,
 		4, 4, 4, 4, 4,
 		5, 5, 5, 5, 5
+	};
+	private int[] normalDices = {
+		5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11
 	};
 
 	#region UnityEvent
@@ -80,6 +91,21 @@ public class CATANMapTileLocater : MonoBehaviour {
 			}
 			foreach(var v in network.GetLinkPos()) {
 				Instantiate(linkObj, v, Quaternion.identity);
+			}
+		}
+		if(network != null) {
+			//タイル同士の接続
+			network.ConnectingTile();
+			//ダイス番号の設定
+			network.SetDiceNumber(normalDices);
+			//ダイス番号の表示
+			Vector3 pos;
+			foreach(var t in network.Tiles) {
+				pos = t.pos;
+				pos.y = textY;
+				var obj = (Text)Instantiate(diceNumText, pos, diceNumText.transform.rotation);
+				obj.transform.SetParent(diceNumParent);
+				obj.text = t.diceNumber.ToString();
 			}
 		}
 		this.network = network;
@@ -138,7 +164,7 @@ public class CATANMapTileLocater : MonoBehaviour {
 		offsetL = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * radius;
 
 		//配置
-		var network = new CATANMapNetwork();
+		var network = new CATANMapNetwork(radius, 1f);
 		LocateForLine(locateStack, max, baseOffset, network);
 		for(int i = max - 1, j = 1; i >= min; --i, ++j) {
 			LocateForLine(locateStack, i, offsetL * j + baseOffset, network);
@@ -151,10 +177,12 @@ public class CATANMapTileLocater : MonoBehaviour {
 	/// 線状に配置
 	/// </summary>
 	private void LocateForLine(Stack<int> locateStack, int locateNum, Vector3 offset, CATANMapNetwork network) {
+		int type;
 		for(int i = 0; i < locateNum; ++i) {
-			var tileObj = (GameObject)Instantiate(locateObjs[locateStack.Pop()], new Vector3(0f, 0f, i * radius) + offset, Quaternion.identity);
+			type = locateStack.Pop();
+			var tileObj = (GameObject)Instantiate(locateObjs[type], new Vector3(0f, 0f, i * radius) + offset, Quaternion.identity);
 			tileObj.transform.SetParent(tileParent);
-			network.AddTile(tileObj, 1f);	//タイルの頂点は中心から1の距離にある(radiusは使わない)
+			network.AddTile(tileObj, (CATANUtil.MapTileType)type);	//タイルの頂点は中心から1の距離にある(radiusは使わない)
 		}
 	}
 

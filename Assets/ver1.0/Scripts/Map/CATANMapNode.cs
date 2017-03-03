@@ -7,13 +7,16 @@ using System.Collections.Generic;
 /// </summary>
 public class CATANMapNode : CATANMapElement {
 
-	public List<CATANMapLink> links;
+	public List<CATANMapTile> tiles;	//隣接タイル
+	public List<CATANMapLink> links;	//隣接リンク
 
 	public CATANMapNode() : base() {
+		tiles = new List<CATANMapTile>();
 		links = new List<CATANMapLink>();
 	}
 
 	public CATANMapNode(bool isBuild, Vector3 pos) : base(isBuild, pos) {
+		tiles = new List<CATANMapTile>();
 		links = new List<CATANMapLink>();
 	}
 
