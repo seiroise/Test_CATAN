@@ -1,10 +1,10 @@
 # =============== #
 # Unity generated #
 # =============== #
-#Build/
-#Temp/
-#Obj/
-#UnityGenerated/
+Build/
+Temp/
+Obj/
+UnityGenerated/
 Library/
 
 # ===================================== #
@@ -36,7 +36,6 @@ Thumbs.db
 # ============ #
 # for others   #
 # ============ #
-!Assets/
 
 *.log #log files, for some plugins
 *.pyc #python bytecode cache, for some plugins.
