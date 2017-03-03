@@ -1,10 +1,10 @@
 # =============== #
 # Unity generated #
 # =============== #
-Build/
-Temp/
-Obj/
-UnityGenerated/
+#Build/
+#Temp/
+#Obj/
+#UnityGenerated/
 Library/
 
 # ===================================== #
