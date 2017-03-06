@@ -3,25 +3,20 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// カタンマップの要素
+/// マップの要素
 /// </summary>
 public class CATANMapElement {
-	
-	public bool isBuild;
-	public GameObject building;
-	public Vector3 pos;
-	public float resetYOffset;
 
-	public CATANMapElement() {
-		isBuild = false;
-		pos = Vector3.zero;
-		resetYOffset = 0f;
-	}
+	protected Vector3 _position;
+	public Vector3 position { get { return _position; } }
+	protected GameObject _building;
+	protected bool _isBuild;
+	public bool isBuild { get { return _isBuild; } }
 
-	public CATANMapElement(bool isBuild, Vector3 pos) {
-		this.isBuild = isBuild;
-		this.pos = pos;
-		this.resetYOffset = 0f;
+	public CATANMapElement(Vector3 position) {
+		this._position = position;
+		this._building = null;
+		this._isBuild = false;
 	}
 
 	#region Function
@@ -29,21 +24,10 @@ public class CATANMapElement {
 	/// <summary>
 	/// 建物の設定
 	/// </summary>
-	public void SetBuilding(GameObject building) {
-		if(isBuild) return;
-		this.building = building;
-		isBuild = true;
-	}
-
-	/// <summary>
-	/// 建物の座標を元に戻す
-	/// </summary>
-	public void ResetPosition() {
-		if(!isBuild) return;
-		Vector3 rPos = pos;
-		rPos.y += resetYOffset;
-		building.transform.position = rPos;
-		building.transform.eulerAngles = Vector3.zero;
+	public virtual void SetBuilding(GameObject building) {
+		if(_isBuild) return;
+		this._building = building;
+		this._isBuild = true;
 	}
 
 	#endregion

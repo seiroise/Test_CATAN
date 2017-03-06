@@ -5,16 +5,16 @@ using System.Text;
 using System.Collections.Generic;
 
 /// <summary>
-/// マップネットワーク
+/// マップネットワークと環境のデータ
 /// </summary>
 public class CATANMapNetwork {
 
 	private Dictionary<string, CATANMapTile> tileDic;
-	public Dictionary<string, CATANMapTile>.ValueCollection Tiles {
-		get { return tileDic.Values; }
-	}
+	public Dictionary<string, CATANMapTile>.ValueCollection tiles { get { return tileDic.Values; } }
 	private Dictionary<string, CATANMapNode> nodeDic;
 	private Dictionary<string, CATANMapLink> linkDic;
+
+	private List<CATANMapNode> sortedWeightNodes;   //重み付けによりソートされたノードリスト
 
 	private float tileRadius;
 	private float vertRadius;
@@ -27,6 +27,8 @@ public class CATANMapNetwork {
 		tileDic = new Dictionary<string, CATANMapTile>();
 		nodeDic = new Dictionary<string, CATANMapNode>();
 		linkDic = new Dictionary<string, CATANMapLink>();
+
+		sortedWeightNodes = new List<CATANMapNode>();
 
 		this.tileRadius = tileRadius;
 		this.vertRadius = vertRadius;
@@ -67,7 +69,7 @@ public class CATANMapNetwork {
 		string posStr;
 		int len = vertOffsets.Length;
 		//タイルの追加
-		CATANMapTile tile = new CATANMapTile(false, tPos, tileType);
+		CATANMapTile tile = new CATANMapTile(tPos, tileType);
 		tile.SetBuilding(tileObj);
 		tileDic.Add(tPos.ToString(), tile);
 		//ノードの追加
@@ -76,8 +78,7 @@ public class CATANMapNetwork {
 			pos = tPos + vertOffsets[i] * vertRadius;
 			posStr = pos.ToString();
 			if(!nodeDic.ContainsKey(posStr)) {
-				node = new CATANMapNode(false, pos);
-				node.resetYOffset = 1f;
+				node = new CATANMapNode(pos);
 				nodeDic.Add(posStr, node);
 			}
 		}
@@ -85,8 +86,8 @@ public class CATANMapNetwork {
 		for(int i = 0; i < len; ++i) {
 			pos = tPos + vertOffsets[i] * vertRadius;
 			node = nodeDic[pos.ToString()];
-			node.tiles.Add(tile);
-			tile.nodes.Add(node);
+			node.AddNeighbourTile(tile);
+			tile.AddNode(node);
 		}
 		//リンクの追加と接続
 		Vector3 a, b;
@@ -97,16 +98,15 @@ public class CATANMapNetwork {
 			pos = tPos + ((a + b) / 2f) * vertRadius;
 			posStr = pos.ToString();
 			if(!linkDic.ContainsKey(posStr)) {
-				link = new CATANMapLink(false, pos);
-				link.resetYOffset = 1f;
+				link = new CATANMapLink(pos);
 				//aとの接続
 				node = nodeDic[(tPos + a).ToString()];
-				link.a = node;
-				node.links.Add(link);
+				link.SetNodeA(node);
+				node.AddNeighbourLink(link);
 				//bとの接続
 				node = nodeDic[(tPos + b).ToString()];
-				link.b = node;
-				node.links.Add(link);
+				link.SetNodeB(node);
+				node.AddNeighbourLink(link);
 				//リンクの追加
 				linkDic.Add(posStr, link);
 			}
@@ -121,12 +121,12 @@ public class CATANMapNetwork {
 		string posStr;
 		CATANMapTile tile;
 		foreach(var t in tileDic.Values) {
-			basePos = t.pos;
+			basePos = t.position;
 			for(int i = 0; i < tileOffsets.Length; ++i) {
 				posStr = (basePos + tileOffsets[i]).ToString();
 				if(tileDic.ContainsKey(posStr)) {
 					tile = tileDic[posStr];
-					t.AddNeighbourTile(i, tile);
+					t.AddTile(i, tile);
 				}
 			}
 		}
@@ -160,6 +160,22 @@ public class CATANMapNetwork {
 			//Debug.Log(diceNums[i]);
 			prevTile = tile;
 		}
+		//重み付け
+		foreach(var n in nodeDic.Values) {
+			n.SetWeight();
+			sortedWeightNodes.Add(n);
+		}
+		sortedWeightNodes.Sort((x, y) => {
+			float xw, yw;
+			xw = x.nearTileDiceWeight;
+			yw = y.nearTileDiceWeight;
+			if(xw > yw) {
+				return 1;
+			} else if(xw < yw) {
+				return -1;
+			}
+			return 0;
+		});
 	}
 
 	/// <summary>
@@ -215,26 +231,49 @@ public class CATANMapNetwork {
 	}
 
 	/// <summary>
-	/// マップ要素の座標を元に戻す
+	/// 指定した座標に最も近いリンクを返す
 	/// </summary>
-	public void ResetElemPosition() {
-		foreach(var t in tileDic.Values) t.ResetPosition();
-		foreach(var n in nodeDic.Values) n.ResetPosition();
-		foreach(var l in linkDic.Values) l.ResetPosition();
+	public CATANMapLink GetNearLink(Vector3 pos) {
+		var node = nodeDic.Values.First();
+		if(node == null) return null;
+		var prevLink = node.GetNearLink(pos);
+		var link = prevLink;
+		while(true) {
+			//近い方に進んでいく
+			node = prevLink.GetOppsiteNode(node);
+			link = node.GetNearLink(pos);
+			if(link == prevLink) {
+				return link;
+			}
+			prevLink = link;
+		}
 	}
 
 	/// <summary>
 	/// ノードの座標を取得
 	/// </summary>
 	public List<Vector3> GetNodePos() {
-		return new List<Vector3>(nodeDic.Values.Select(x => x.pos));
+		return new List<Vector3>(nodeDic.Values.Select(x => x.position));
 	}
 
 	/// <summary>
 	/// リンクの座標を取得
 	/// </summary>
 	public List<Vector3> GetLinkPos() {
-		return new List<Vector3>(linkDic.Values.Select(x => x.pos));
+		return new List<Vector3>(linkDic.Values.Select(x => x.position));
+	}
+
+	/// <summary>
+	/// 現段階で建築可能な最も重みの大きいノードを返す
+	/// 返すノードが存在しない場合はnullを返す
+	/// </summary>
+	public CATANMapNode GetMostWeightNode() {
+		foreach(var n in sortedWeightNodes) {
+			if(!(n.isBuild || n.isBuildNearNode)) {
+				return n;
+			}
+		}
+		return null;
 	}
 
 	#endregion

@@ -6,25 +6,22 @@ using System.Collections.Generic;
 /// </summary>
 public class CATANMapTile : CATANMapElement {
 
-	public int diceNumber;				//ダイスの出目(2-6,8-11)
-	public CATANUtil.MapTileType type;  //タイル種類
-
-	private CATANMapTile[] dirTiles;	//隣接方向毎のタイル(0=北東、1=北, 2=北西, ...)
-
-	private List<CATANMapTile> tiles;	//隣接タイル
-	public List<CATANMapNode> nodes;	//頂点ノード
-
-	public CATANMapTile() : base() {
-		diceNumber = 0;
-		type = CATANUtil.MapTileType.NoUse;
-		dirTiles = new CATANMapTile[6];
-		tiles = new List<CATANMapTile>();
-		nodes = new List<CATANMapNode>();
+	private int _diceNumber;            //ダイスの出目(2-6,8-11)
+	public int diceNumber {
+		get { return _diceNumber; }
+		set { _diceNumber = value; }
 	}
+	private CATANUtil.MapTileType _type;  //タイル種類
+	public CATANUtil.MapTileType type { get { return _type; } }
 
-	public CATANMapTile(bool isBuild, Vector3 pos, CATANUtil.MapTileType type) : base(isBuild, pos) {
-		diceNumber = 0;
-		this.type = type;
+	private CATANMapTile[] dirTiles;    //隣接方向毎のタイル(0=北東、1=北, 2=北西, ...)
+
+	private List<CATANMapTile> tiles;   //隣接タイル
+	private List<CATANMapNode> nodes;   //頂点ノード
+
+	public CATANMapTile(Vector3 pos, CATANUtil.MapTileType type) : base(pos) {
+		_diceNumber = 0;
+		_type = type;
 		dirTiles = new CATANMapTile[6];
 		tiles = new List<CATANMapTile>();
 		nodes = new List<CATANMapNode>();
@@ -35,7 +32,7 @@ public class CATANMapTile : CATANMapElement {
 	/// <summary>
 	/// 隣接タイルの追加
 	/// </summary>
-	public void AddNeighbourTile(int dirIndex, CATANMapTile tile) {
+	public void AddTile(int dirIndex, CATANMapTile tile) {
 		if(dirIndex < 0 || dirTiles.Length <= dirIndex) return;
 		dirTiles[dirIndex] = tile;
 		tiles.Add(tile);
@@ -55,15 +52,22 @@ public class CATANMapTile : CATANMapElement {
 	public CATANMapTile GetNearTile(Vector3 pos) {
 		CATANMapTile nearTile = this;
 		float dist;
-		float minDist = Vector3.Distance(this.pos, pos);
+		float minDist = Vector3.Distance(this._position, pos);
 		foreach(var t in tiles) {
-			dist = Vector3.Distance(t.pos, pos);
+			dist = Vector3.Distance(t._position, pos);
 			if(minDist > dist) {
 				minDist = dist;
 				nearTile = t;
 			}
 		}
 		return nearTile;
+	}
+
+	/// <summary>
+	/// 隣接ノードの追加
+	/// </summary>
+	public void AddNode(CATANMapNode node) {
+		nodes.Add(node);
 	}
 
 	/// <summary>

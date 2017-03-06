@@ -2,34 +2,46 @@
 using System.Collections;
 
 /// <summary>
-/// カタンマップノード(道とか建てられる場所)
+/// マップリンク(道とか建てられる場所)
 /// </summary>
 public class CATANMapLink : CATANMapElement {
 
-	public CATANMapNode a, b;
+	private CATANMapNode _a, _b;
 
-	public CATANMapLink() : base() {
-		a = b = null;
-	}
-
-	public CATANMapLink(bool isBuild, Vector3 pos) : base(isBuild, pos) {
-		a = b = null;
+	public CATANMapLink(Vector3 pos) : base(pos) {
+		_a = _b = null;
 	}
 
 	#region Function
+
+	/// <summary>
+	/// Aノードの設定
+	/// </summary>
+	public void SetNodeA(CATANMapNode node) {
+		_a = node;
+	}
+
+	/// <summary>
+	/// Bノードの設定
+	/// </summary>
+	public void SetNodeB(CATANMapNode node) {
+		_b = node;
+	}
 
 	/// <summary>
 	/// 反対側のノードを返す
 	/// nodeがaでもbでもない場合はnullを返す
 	/// </summary>
 	public CATANMapNode GetOppsiteNode(CATANMapNode node) {
-		if(node == a) {
-			return b;
-		} else if(node == b) {
-			return a;
+		if(node == _a) {
+			return _b;
+		} else if(node == _b) {
+			return _a;
 		}
 		return null;
 	}
+
+
 
 	#endregion
 }

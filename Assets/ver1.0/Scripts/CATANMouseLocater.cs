@@ -12,7 +12,7 @@ public class CATANMouseLocater : MonoBehaviour {
 	[SerializeField]
 	private Text selectText;
 	[SerializeField]
-	private CATANMapTileLocater locater;
+	private CATANMapCreater locater;
 	[SerializeField]
 	private GameObject[] locateObjects;
 	private int selectIndex = 0;
@@ -29,9 +29,6 @@ public class CATANMouseLocater : MonoBehaviour {
 	private void Update() {
 		if(Input.GetMouseButtonDown(0)) {
 			Locate();
-		} else if(Input.GetMouseButtonDown(1)) {
-			Debug.Log("ResetPosition");
-			locater.Network.ResetElemPosition();
 		}
 		SelectWheel();
 	}
@@ -49,9 +46,9 @@ public class CATANMouseLocater : MonoBehaviour {
 		var mRay = cam.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hitInfo;
 		if(Physics.Raycast(mRay, out hitInfo, 100f)) {
-			var node = locater.Network.GetNearNode(hitInfo.point);
+			var node = locater.network.GetNearNode(hitInfo.point);
 			if(node.isBuild) return;
-			Vector3 pos = node.pos;
+			Vector3 pos = node.position;
 			pos.y = 10f;
 			var obj = (GameObject)Instantiate(locateObjects[selectIndex], pos, Quaternion.identity);
 			node.SetBuilding(obj);
